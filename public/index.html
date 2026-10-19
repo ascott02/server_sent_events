@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Server-Sent Events Demo</title>
+</head>
+<body>
+  <h1>Announcements</h1>
+  <button id="send" disabled>Announce room clear</button>
+  <ul id="feed"></ul>
+  <script>
+    const source = new EventSource('/events');
+    const sendButton = document.querySelector('#send');
+
+    source.onopen = () => { sendButton.disabled = false; };
+    source.onerror = () => { sendButton.disabled = true; };
+
+    source.addEventListener('notice', event => {
+      const li = document.createElement('li');
+      li.textContent = JSON.parse(event.data).text;
+      document.querySelector('#feed').prepend(li);
+    });
+
+    sendButton.onclick = async () => {
+      await fetch('/announce', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: 'Room 12 cleared' })
+      });
+    };
+  </script>
+</body>
+</html>
